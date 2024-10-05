@@ -1,80 +1,490 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="de">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Deutsche Meme Generator</title>
-    <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet">
-    <script src="https://cdn.jsdelivr.net/npm/vue@2.7.14/dist/vue.js"></script>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+  <style>
+    @keyframes coinAnimation {
+      0% { opacity: 1; transform: translateY(0) scale(1); }
+      100% { opacity: 0; transform: translateY(-100px) scale(0.5); }
+    }
+    @keyframes levelUpAnimation {
+      0% { transform: scale(1); }
+      50% { transform: scale(1.2); }
+      100% { transform: scale(1); }
+    }
+    body {
+      background-image: url('https://cdn.wallpapersafari.com/79/31/E547v1.jpg');
+      background-size: cover;
+      background-attachment: fixed;
+      font-family: 'Arial', sans-serif;
+      font-size: 3vw;
+      text-align: center;
+      color: rgb(0, 0, 0);
+      margin: 0;
+      padding: 0;
+      overflow: hidden;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      height: 100vh;
+    }
+    #ui { width: 100%; display: flex; justify-content: space-between; padding: 2vw; box-sizing: border-box; position: absolute; top: 0; left: 0; z-index: 2; pointer-events: none; }
+    .ui-element { background-color: rgba(255, 255, 255, 0.5); border-radius: 1vw; padding: 1vw 2vw; font-size: 3.5vw; font-weight: bold; color: black; display: inline-flex; align-items: center; pointer-events: auto; }
+    .ui-element img { width: 2.5vw; height: 2.5vw; margin-left: 1vw; }
+    #score { font-size: 6vw; font-weight: bold; color: white; margin-top: 25vh; background-color: rgba(0, 0, 0, 0.5); border-radius: 1vw; padding: 1vw 2vw; display: inline-block; }
+    #button { width: 50vw; height: 50vw; background-color: rgba(0, 0, 255, 0.7); border-radius: 50%; user-select: none; position: relative; display: flex; align-items: center; justify-content: center; margin: 2vw auto; transition: transform 0.1s; pointer-events: auto; }
+    #button img { width: 100%; height: 100%; border-radius: 50%; }
+    #button span { position: absolute; font-size: 8vw; font-weight: bold; color: rgb(24, 21, 21); z-index: 1; }
+    #button:active { transform: scale(0.95); }
+    #coin-animation { position: absolute; width: 10vw; height: 10vw; background-image: url('https://i.postimg.cc/JhKtFTn1/IMG-1271.png'); background-size: contain; animation: coinAnimation 1s ease-out; pointer-events: none; display: none; }
+    #playSoundButton, #leaderboardButton, #saveButton, #inviteFriendButton, #musicButton { background-color: rgba(255, 255, 255, 0.5); border: none; border-radius: 1vw; padding: 1vw 2vw; font-size: 2.5vw; font-weight: bold; color: black; cursor: pointer; margin: 1vw; }
+    #playSoundButton { position: absolute; bottom: 2vw; right: 2vw; }
+    #leaderboardButton { position: absolute; bottom: 10vw; right: 2vw; }
+    #saveButton { position: absolute; bottom: 18vw; right: 2vw; }
+    #inviteFriendButton { position: absolute; bottom: 26vw; right: 2vw; }
+    #musicButton { position: absolute; bottom: 34vw; right: 2vw; }
+    #menuButton { position: absolute; top: 12vw; left: 2vw; background-color: rgba(255, 255, 255, 0.5); border: none; border-radius: 1vw; padding: 1vw 2vw; font-size: 2.5vw; font-weight: bold; color: black; cursor: pointer; z-index: 2; }
+    #coins { position: absolute; top: 2vw; left: 50%; transform: translateX(-50%); }
+    #activeUsers { position: absolute; top: 2vw; right: 2vw; background-color: rgba(255, 255, 255, 0.5); border-radius: 1vw; padding: 1vw 2vw; font-size: 2.5vw; font-weight: bold; color: black; }
+    #sideMenu { position: fixed; top: 0; left: -100%; width: 300px; height: 100%; background-color: rgba(255, 255, 255, 0.9); box-shadow: 2px 0 5px rgba(0,0,0,0.5); transition: left 0.3s; display: flex; flex-direction: column; padding-top: 5vw; z-index: 3; }
+    #sideMenu a { padding: 1.5vw; text-align: center; font-size: 2.5vw; font-weight: bold; color: black; text-decoration: none; margin-bottom: 1vw; }
+    #sideMenu a:hover { background-color: rgba(0, 0, 0, 0.1); }
+    #sideMenuClose { position: absolute; top: 1vw; right: 1vw; font-size: 2.5vw; font-weight: bold; color: black; cursor: pointer; }
+    #leaderboardModal { display: none; position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%); width: 80vw; height: 80vh; background-color: rgba(255, 255, 255, 0.9); border-radius: 1vw; box-shadow: 0 0 10px rgba(0,0,0,0.5); overflow: auto; padding: 2vw; box-sizing: border-box; z-index: 4; }
+    #leaderboardModal h2 { text-align: center; font-size: 3.5vw; margin-bottom: 2vw; }
+    #leaderboardModal ul { list-style: none; padding: 0; }
+    #leaderboardModal li { font-size: 2.5vw; padding: 1vw 0; border-bottom: 1px solid rgba(0,0,0,0.1); }
+    #leaderboardModalClose { position: absolute; top: 1vw; right: 1vw; font-size: 2.5vw; font-weight: bold; color: black; cursor: pointer; }
+    #shop { position: fixed; top: 0; left: -100%; width: 300px; height: 100%; background-color: rgba(255, 255, 255, 0.9); box-shadow: 2px 0 5px rgba(0,0,0,0.5); transition: left 0.3s; display: flex; flex-direction: column; padding-top: 5vw; z-index: 3; }
+    #shop h2 { text-align: center; font-size: 3.5vw; margin-bottom: 2vw; }
+    #shop ul { list-style: none; padding: 0; }
+    #shop li { font-size: 2.5vw; padding: 1vw 0; border-bottom: 1px solid rgba(0,0,0,0.1); text-align: center; }
+    #shop button { background-color: rgba(0, 255, 0, 0.7); border: none; border-radius: 1vw; padding: 1vw 2vw; font-size: 2.5vw; font-weight: bold; color: white; cursor: pointer; margin: 1vw auto; display: block; transition: background-color 0.3s; }
+    #shop button:hover { background-color: rgba(0, 200, 0, 0.7); }
+    #shopClose { position: absolute; top: 1vw; right: 1vw; font-size: 2.5vw; font-weight: bold; color: black; cursor: pointer; }
+    #dailyReward { position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%); background-color: rgba(255, 255, 255, 0.9); border-radius: 1vw; box-shadow: 0 0 10px rgba(0, 0, 0, 0.5); width: 60vw; padding: 2vw; text-align: center; z-index: 5; display: none; }
+    #dailyReward button { background-color: rgba(0, 255, 0, 0.7); border: none; border-radius: 1vw; padding: 1vw 2vw; font-size: 2.5vw; font-weight: bold; color: white; cursor: pointer; margin-top: 2vw; transition: background-color 0.3s; }
+    #dailyReward button:hover { background-color: rgba(0, 200, 0, 0.7); }
+    #musicMenu { display: none; position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%); width: 80vw; height: 80vh; background-color: rgba(255, 255, 255, 0.9); border-radius: 1vw; box-shadow: 0 0 10px rgba(0,0,0,0.5); overflow: auto; padding: 2vw; box-sizing: border-box; z-index: 6; }
+    #musicMenu h2 { text-align: center; font-size: 3.5vw; margin-bottom: 2vw; }
+    #musicMenu .music-item { display: flex; justify-content: space-between; align-items: center; font-size: 2.5vw; padding: 1vw 0; border-bottom: 1px solid rgba(0,0,0,0.1); }
+    #musicMenu button { background-color: rgba(0, 255, 0, 0.7); border: none; border-radius: 1vw; padding: 1vw 2vw; font-size: 2.5vw; font-weight: bold; color: white; cursor: pointer; margin-left: 1vw; transition: background-color 0.3s; }
+    #musicMenu button:hover { background-color: rgba(0, 200, 0, 0.7); }
+    #musicMenuClose { position: absolute; top: 1vw; right: 1vw; font-size: 2.5vw; font-weight: bold; color: black; cursor: pointer; }
+    #videoContainer { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background-color: black; display: flex; align-items: center; justify-content: center; z-index: 9999; }
+    #gameContainer { display: none; }
+    #introGif { width: 100%; height: auto; }
+  </style>
+  <script src="https://telegram.org/js/telegram-web-app.js"></script>
 </head>
-<body class="bg-gray-100">
-    <div id="app" class="container mx-auto p-4">
-        <h1 class="text-3xl font-semibold mb-4">Deutsche Meme Generator</h1>
-        <div class="bg-white rounded-md shadow-md p-4 mb-4">
-            <div class="mb-4">
-                <img v-if="memeImageUrl" :src="memeImageUrl" class="max-h-64 mx-auto">
-            </div>
-            <div class="mb-4">
-                <label for="imageInput" class="block mb-2">Bild hochladen</label>
-                <input type="file" id="imageInput" @change="handleImageUpload" class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500">
-            </div>
-            <div class="mb-4">
-                <p class="font-semibold">Bildbeschreibung: {{ caption }}</p>
-            </div>
-            <div class="mb-4">
-                <p class="font-semibold">Meme-Text: {{ joke }}</p>
-            </div>
-            <button @click="generateMeme" class="bg-blue-500 text-white px-4 py-2 rounded-md hover:bg-blue-600">Meme generieren</button>
-        </div>
+<body>
+  <div id="videoContainer">
+    <img id="introGif" src="https://dl.dropboxusercontent.com/scl/fi/9c6t7eblcxa6copiuxj4u/download-3.gif?rlkey=ar7507bzf3k5t5t7m8ubi07ij&st=p3g6mw4r&dl=0.gif" alt="Intro GIF">
+  </div>
+  <div id="gameContainer">
+    <div id="ui">
+      <div class="ui-element" id="level">Level: 1</div>
+      <button id="menuButton">Menü</button>
+      <div class="ui-element" id="coins">Coins: 0 <img src="https://i.postimg.cc/JhKtFTn1/IMG-1271.png" alt="Coin"></div>
+      <div class="ui-element" id="username">@Doxbindatas</div>
     </div>
+    <div id="score">0</div>
+    <div id="button">
+      <img src="https://i.postimg.cc/JhKtFTn1/IMG-1271.png" alt="">
+      <span></span>
+    </div>
+    <div id="coin-animation"></div>
+    <button id="playSoundButton" onclick="toggleSound()">Sound Ausschalten</button>
+    <button id="leaderboardButton" onclick="toggleLeaderboard()">Bestenliste</button>
+    <button id="saveButton" onclick="saveGame()">Speichern</button>
+    <button id="inviteFriendButton" onclick="inviteFriend()">Freunde Einladen</button>
+    <button id="musicButton" onclick="toggleMusicMenu()">Musik</button>
 
-    <script type="module">
-        new Vue({
-            el: '#app',
-            data: {
-                memeImageUrl: '',
-                caption: '',
-                joke: ''
-            },
-            methods: {
-                async handleImageUpload(event) {
-                    const file = event.target.files[0];
-                    this.memeImageUrl = URL.createObjectURL(file);
+    <div id="sideMenu">
+      <span id="sideMenuClose">✖</span>
+      <a href="#" id="shopButton">Shop</a>
+    </div>
+    <div id="leaderboardModal">
+      <h2>Bestenliste</h2>
+      <span id="leaderboardModalClose">✖</span>
+      <ul id="leaderboardList"></ul>
+    </div>
+    <div id="shop">
+      <span id="shopClose">✖</span>
+      <h2>Shop</h2>
+      <ul id="shopList"></ul>
+    </div>
+    <div id="dailyReward">
+      <h2>Tägliche Belohnung</h2>
+      <p>Herzlichen Glückwunsch! Du hast deine tägliche Belohnung erhalten.</p>
+      <button id="collectRewardButton">Belohnung Einsammeln</button>
+    </div>
+    <div id="musicMenu">
+      <h2>Musik Menü</h2>
+      <span id="musicMenuClose">✖</span>
+      <div class="music-item">
+        <span>C H O CNWfeat CNW 16 bars</span>
+        <button onclick="playSong('song1')">Play</button>
+        <button onclick="pauseSong()">Pause</button>
+      </div>
+      <div class="music-item">
+        <span>Bus1nezz biz</span>
+        <button onclick="playSong('song2')">Play</button>
+        <button onclick="pauseSong()">Pause</button>
+      </div>
+      <div class="music-item">
+        <span>CC crimeNET Szene Track</span>
+        <button onclick="playSong('song3')">Play</button>
+        <button onclick="pauseSong()">Pause</button>
+      </div>
+      <div class="music-item">
+        <span>Bratee ein Tabak Pape Kiffer</span>
+        <button onclick="playSong('song4')">Play</button>
+        <button onclick="pauseSong()">Pause</button>
+      </div>
+      <div class="music-item">
+        <span>Bob Marley Buffalo soldier</span>
+        <button onclick="playSong('song5')">Play</button>
+        <button onclick="pauseSong()">Pause</button>
+      </div>
+    </div>
+  </div>
+  <script>
+    Telegram.WebApp.ready();
+    const tg = window.Telegram.WebApp;
+    const username = tg.initDataUnsafe.user ? tg.initDataUnsafe.user.username : 'Unknown User';
+    document.getElementById('username').innerText = '@' + username;
 
-                    // Use Salesforce/blip-image-captioning-large for image captioning
-                    const { HfInference } = await import('https://esm.sh/@huggingface/inference');
-                    const hf = new HfInference('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');
+    let counter = localStorage.getItem('counter') ? parseInt(localStorage.getItem('counter')) : 0;
+    let coins = localStorage.getItem('coins') ? parseInt(localStorage.getItem('coins')) : 0;
+    let level = localStorage.getItem('level') ? parseInt(localStorage.getItem('level')) : 1;
+    let soundEnabled = true;
+    let currentAudio = null;
+    const loopAudio = new Audio('https://example.com/loop-audio.mp3'); // replace with actual URL
+    loopAudio.loop = true;
+    const songs = {
+      song1: new Audio('https://dl.dropboxusercontent.com/scl/fi/y9firxxgd2eqzb1i4rq5x/C-H-O-CNWfeat-CNW-16-bars.mp3?rlkey=3qtad6n3jk116e9dc6t0giu4d&st=q2zfoko1&dl=0'),
+      song2: new Audio('https://dl.dropboxusercontent.com/scl/fi/1io0txhr39zlgbocx65lt/Bus1nezz-biz.mp3?rlkey=jcsg4wxf4euzg65rgzw0urd41&st=cfc8sl92&dl=0'),
+      song3: new Audio('https://dl.dropboxusercontent.com/scl/fi/n96l7vgtde12s60168hf3/CC-crimeNET-Szene-Track-2015-HQ-1.mp3?rlkey=2hgpku4i44f7bfp04xr9sgjn1&st=v4lqagop&dl=0'),
+      song4: new Audio('https://dl.dropboxusercontent.com/scl/fi/hyju8t3at71wdgk88x8gi/Bratee-ein-Tabak-Pape-Kiffer.mp3?rlkey=f62mm3zj5y26ho7gvhk1emx5l&st=4i56uw9a&dl=0'),
+      song5: new Audio('https://dl.dropboxusercontent.com/scl/fi/iv1rjs6mqk2qvhk8d9d30/Bob-Marley-Buffalo-soldier.mp3?rlkey=4eucz565t13prewvr3wcku1o4&st=3vfyi1gt&dl=0')
+    };
 
-                    const response = await hf.imageToText({
-                        model: 'Salesforce/blip-image-captioning-large',
-                        data: await fetch(this.memeImageUrl).then(r => r.blob())
-                    });
+    // Ensure all Audio elements can play on mobile by enabling touch start interaction
+    document.body.addEventListener('touchstart', function() {
+      Object.values(songs).forEach(audio => audio.load());
+      loopAudio.load();
+    }, { once: true });
 
-                    this.caption = response.generated_text;
-                },
-                async generateMeme() {
-                    // Call the LLM API to generate a funny German joke about the caption
-                    const { HfInference } = await import('https://esm.sh/@huggingface/inference');
-                    const hf = new HfInference('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');
+    const products = JSON.parse(localStorage.getItem('products')) || [
+      { level: 1, cost: 100, increment: 2, autoClick: false },
+      { level: 1, cost: 200, increment: 0, autoClick: true, interval: 3000, autoClickId: null, bonus: 'Doppelte Münzen für 10 Sekunden' },
+      { level: 1, cost: 300, increment: 0, autoClick: false, bonus: 'Erhalte zufällige Münzgewinne' },
+      { level: 1, cost: 400, increment: 0, autoClick: false, bonus: 'Reduziert Upgrade-Kosten um 10%' }
+    ];
 
-                    let out = "";
-                    for await (const chunk of hf.chatCompletionStream({
-                        model: "mistralai/Mixtral-8x7B-Instruct-v0.1",
-                        messages: [
-                            { role: "user", content: `Generiere einen witzigen deutschen Witz über die Bildbeschreibung: "${this.caption}"` }
-                        ],
-                        max_tokens: 500,
-                        temperature: 0.7,
-                        seed: 0,
-                    })) {
-                        if (chunk.choices && chunk.choices.length > 0) {
-                            out += chunk.choices[0].delta.content || "";
-                        }
-                    }
-                    this.joke = out.trim();
-                }
+    const levelThresholds = [10, 20, 30, 40, 50, 60, 70, 80, 90, 100, 110, 120, 130, 140, 150, 160, 170, 180, 190, 200];
+    const backgrounds = [
+      'https://www.whatspaper.com/wp-content/uploads/2023/09/scooby-doo-wallpaper-whatspaper-10.jpg',
+      'https://wallpapercave.com/wp/wp7468173.jpg',
+      'https://m.media-amazon.com/images/I/61skScvD1UL._AC_SL1000_.jpg',
+      'https://files.cults3d.com/uploaders/23891584/illustration-file/3f3b9827-b249-45c5-8da9-4798f4cfece1/cannabis-1.png',
+      'https://wallpaperaccess.com/full/2351158.jpg',
+      'https://wallpapercave.com/wp/wp4815885.jpg',
+      'https://www.cannabisenligne.net/wp-content/uploads/2018/04/photo_2020-09-29_10-17-02-886x1024.jpg',
+      'https://i0.wp.com/orderweedpattaya.com/wp-content/uploads/2023/05/IMG-20230505-WA0007.jpg?fit=1536%2C2048&ssl=1',
+      'https://i.pinimg.com/736x/67/88/94/678894fa02eea0d82490d9467fc1992c--cannabis.jpg',
+      'https://i.redd.it/4rb1b79f6jfb1.jpg'
+    ];
+
+    const levelUpMessages = [
+      '', 'Level Up! Du bist jetzt im Level: Standart Kiffer', 'Level Up! Du bist jetzt im Level: 🇩🇪 Mousse Lieferant',
+      'Level Up! Du bist jetzt im Level: Mousse Anführer', 'Level Up! Du bist jetzt im Level: Dry Raucher',
+      'Level Up! Du bist jetzt im Level: Mousse Händler', 'Level Up! Du bist jetzt im Level: Mousse King',
+      'Level Up! Du bist jetzt im Level: Mousse Schmecker', 'Level Up! Du bist jetzt im Level: Mousse Clan',
+      'Level Up! Du bist jetzt im Level: Mousse Endgegner', 'Level Up! Du bist jetzt im Level: Mousse Imperator',
+      'Level Up! Du bist jetzt im Level: Ecstasy auf Kombi', 'Level Up! Du bist jetzt im Level: 🇩🇪 Ecstasy Lieferant',
+      'Level Up! Du bist jetzt im Level: Ecstasy Chef', 'Level Up! Du bist jetzt im Level: Dry Konsument',
+      'Level Up! Du bist jetzt im Level: Ecstasy Händler', 'Level Up! Du bist jetzt im Level: Ecstasy König',
+      'Level Up! Du bist jetzt im Level: Ecstasy Experte', 'Level Up! Du bist jetzt im Level: Ecstasy Mannschaft',
+      'Level Up! Du bist jetzt im Level: Ecstasy Champion', 'Level Up! Du bist jetzt im Level: Ecstasy Oberhaupt'
+    ];
+
+    window.onload = function() {
+      loopAudio.play().catch(error => console.error('Error playing loop audio:', error));
+      products.forEach(product => {
+        if (product.autoClick && !product.autoClickId) {
+          product.autoClickId = setInterval(() => {
+            counter += product.increment;
+            coins += product.increment;
+            saveGame();
+            updateUI();
+          }, product.interval);
+        }
+      });
+      checkForFriendJoin();
+      updateUI();
+      populateShop();
+      checkDailyReward();
+      setTimeout(() => {
+        document.getElementById('videoContainer').style.display = 'none';
+        document.getElementById('gameContainer').style.display = 'block';
+      }, 5000); // 5 seconds delay
+    };
+
+    document.getElementById('button').addEventListener('mousedown', handleButtonPress);
+    document.getElementById('button').addEventListener('mouseup', handleButtonRelease);
+    document.getElementById('button').addEventListener('touchstart', handleButtonPress);
+    document.getElementById('button').addEventListener('touchend', handleButtonRelease);
+
+    function handleButtonPress(event) {
+      document.getElementById('button').style.transform = 'scale(0.95)';
+      const increment = products[0].increment > 1 ? products[0].increment : 1;
+      counter += increment;
+      coins += increment;
+      checkLevelUp();
+      saveGame();
+      updateUI();
+      showCoinAnimation(event.touches ? event.touches[0].clientX : event.clientX, event.touches ? event.touches[0].clientY : event.clientY);
+    }
+
+    function handleButtonRelease() {
+      document.getElementById('button').style.transform = 'scale(1)';
+    }
+
+    document.getElementById('menuButton').onclick = () => {
+      document.getElementById('sideMenu').style.left = document.getElementById('sideMenu').style.left === '0px' ? '-100%' : '0px';
+    };
+
+    document.getElementById('sideMenuClose').onclick = () => {
+      document.getElementById('sideMenu').style.left = '-100%';
+    };
+
+    document.getElementById('shopButton').onclick = () => {
+      document.getElementById('shop').style.left = document.getElementById('shop').style.left === '0px' ? '-100%' : '0px';
+    };
+
+    document.getElementById('shopClose').onclick = () => {
+      document.getElementById('shop').style.left = '-100%';
+    };
+
+    document.getElementById('leaderboardModalClose').onclick = () => {
+      document.getElementById('leaderboardModal').style.display = 'none';
+    };
+
+    function checkLevelUp() {
+      if (level < levelThresholds.length && counter >= levelThresholds[level]) {
+        level++;
+        alert(levelUpMessages[level]);
+        document.body.style.backgroundImage = `url(${backgrounds[level - 1]})`;
+        document.getElementById('button').style.animation = 'levelUpAnimation 1s ease-in-out';
+      }
+    }
+
+    function updateUI() {
+      document.getElementById('score').innerText = counter;
+      document.getElementById('coins').innerText = 'Coins: ' + coins;
+      document.getElementById('level').innerText = 'Level: ' + level;
+      document.body.style.backgroundImage = `url(${backgrounds[level - 1]})`;
+      products.forEach((product, index) => {
+        const productElem = document.getElementById(`product${index + 1}`);
+        if (productElem) {
+          productElem.querySelector('button').innerText = `Lvl. ${product.level} | ${product.cost} Coins | ${product.bonus || ''}`;
+        }
+      });
+    }
+
+    function saveGame() {
+      localStorage.setItem('counter', counter);
+      localStorage.setItem('coins', coins);
+      localStorage.setItem('level', level);
+      localStorage.setItem('products', JSON.stringify(products));
+    }
+
+    function showCoinAnimation(x, y) {
+      const clone = document.getElementById('coin-animation').cloneNode(true);
+      clone.style.left = `${x - 20}px`;
+      clone.style.top = `${y - 20}px`;
+      clone.style.display = 'block';
+      document.body.appendChild(clone);
+      clone.addEventListener('animationend', () => clone.remove());
+    }
+
+    document.getElementById('button').addEventListener('animationend', () => {
+      document.getElementById('button').style.animation = '';
+    });
+
+    function toggleLeaderboard() {
+      const leaderboardModal = document.getElementById('leaderboardModal');
+      leaderboardModal.style.display = leaderboardModal.style.display === 'none' || leaderboardModal.style.display === '' ? 'block' : 'none';
+      if (leaderboardModal.style.display === 'block') populateLeaderboard();
+    }
+
+    function populateLeaderboard() {
+      const leaderboardList = document.getElementById('leaderboardList');
+      leaderboardList.innerHTML = '';
+      const leaderboard = JSON.parse(localStorage.getItem('leaderboard')) || [];
+      leaderboard.sort((a, b) => b.coins - a.coins).slice(0, 50).forEach((player, index) => {
+        const li = document.createElement('li');
+        li.innerText = `Platz ${index + 1}: @${player.username} Anzahl der Coins: ${player.coins}`;
+        leaderboardList.appendChild(li);
+      });
+    }
+
+    function populateShop() {
+      const shopList = document.getElementById('shopList');
+      shopList.innerHTML = '';
+      products.forEach((product, index) => {
+        const li = document.createElement('li');
+        li.innerHTML = `
+          <strong>La Mousse ${index + 1}</strong> - Level: ${product.level}, Kosten: ${product.cost} Coins, <br> Erhöhung: ${product.increment}, <br> Bonus: ${product.bonus || ''}
+          <button id="buyProduct${index + 1}">Kaufen für ${product.cost} Coins</button>`;
+        shopList.appendChild(li);
+        document.getElementById(`buyProduct${index + 1}`).onclick = () => {
+          if (coins >= product.cost) {
+            coins -= product.cost;
+            product.level++;
+            product.cost = Math.floor(product.cost * 1.5);
+            product.increment += 1;
+            if (product.autoClick && !product.autoClickId) {
+              product.autoClickId = setInterval(() => {
+                counter += product.increment;
+                coins += product.increment;
+                saveGame();
+                updateUI();
+              }, product.interval);
             }
+            if (product.bonus) applyProductBonus(product);
+            saveGame();
+            updateUI();
+            populateShop();
+          } else alert('Nicht genug Coins!');
+        };
+      });
+    }
+
+    function applyProductBonus(product) {
+      if (product.bonus === 'Doppelte Münzen für 10 Sekunden') {
+        const originalIncrement = products[0].increment;
+        products[0].increment *= 2;
+        setTimeout(() => {
+          products[0].increment = originalIncrement;
+        }, 10000);
+      } else if (product.bonus === 'Erhalte zufällige Münzgewinne') {
+        setInterval(() => {
+          const randomCoins = Math.floor(Math.random() * 100);
+          coins += randomCoins;
+          updateUI();
+        }, 5000);
+      } else if (product.bonus === 'Reduziert Upgrade-Kosten um 10%') {
+        products.forEach(prod => {
+          prod.cost = Math.floor(prod.cost * 0.9);
         });
-    </script>
+      }
+    }
+
+    function inviteFriend() {
+      const link = `https://t.me/DoxisGameBot/DrugzClicker?ref=${username}`;
+      navigator.clipboard.writeText(link).then(() => {
+        alert('Einladungslink wurde kopiert! Schick ihn in Gruppen, damit du durch die Einladungen viele La Mousse Coins erhälst');
+      }).catch(err => {
+        console.error('Fehler beim Kopieren des Einladungslinks: ', err);
+      });
+    }
+
+    function checkForFriendJoin() {
+      const urlParams = new URLSearchParams(window.location.search);
+      const ref = urlParams.get('ref');
+      if (ref && ref !== username) {
+        let joins = JSON.parse(localStorage.getItem('joins')) || {};
+        if (!joins[ref]) {
+          joins[ref] = false;
+          localStorage.setItem('joins', JSON.stringify(joins));
+          notifyFriendJoined(ref);
+        }
+      }
+    }
+
+    function notifyFriendJoined(referrerUsername) {
+      setTimeout(() => {
+        let joins = JSON.parse(localStorage.getItem('joins'));
+        if (joins && !joins[referrerUsername]) {
+          joins[referrerUsername] = true;
+          localStorage.setItem('joins', JSON.stringify(joins));
+          alert(`Dein Freund @${referrerUsername} ist dem Spiel beigetreten!`);
+          awardReferralBonus(referrerUsername);
+        }
+      }, 5000);
+    }
+
+    function awardReferralBonus(referrerUsername) {
+      let referrers = JSON.parse(localStorage.getItem('referrers')) || {};
+      if (!referrers[referrerUsername]) referrers[referrerUsername] = 0;
+      referrers[referrerUsername] += 200;
+      localStorage.setItem('referrers', JSON.stringify(referrers));
+      if (referrerUsername === username) {
+        coins += 200;
+        saveGame();
+        updateUI();
+        alert('Du hast 200 Coins verdient, weil dein Freund beigetreten ist!');
+      }
+    }
+
+    function checkDailyReward() {
+      const lastClaimed = localStorage.getItem('lastClaimed');
+      const now = new Date().getTime();
+      const oneDay = 24 * 60 * 60 * 1000;
+      if (!lastClaimed || now - lastClaimed > oneDay) {
+        document.getElementById('dailyReward').style.display = 'block';
+      }
+    }
+
+    document.getElementById('collectRewardButton').onclick = () => {
+      coins += 50;
+      saveGame();
+      updateUI();
+      document.getElementById('dailyReward').style.display = 'none';
+      localStorage.setItem('lastClaimed', new Date().getTime());
+    };
+
+    document.getElementById('musicMenuClose').onclick = () => {
+      document.getElementById('musicMenu').style.display = 'none';
+    };
+
+    function toggleMusicMenu() {
+      const musicMenu = document.getElementById('musicMenu');
+      musicMenu.style.display = musicMenu.style.display === 'none' || musicMenu.style.display === '' ? 'block' : 'none';
+    }
+
+    function playSong(songId) {
+      const song = songs[songId];
+      if (song) {
+        loopAudio.pause();
+        if (currentAudio && !currentAudio.paused) currentAudio.pause();
+        currentAudio = song;
+        currentAudio.play().catch(error => console.error('Audio playback failed:', error, song.src));
+      } else console.error('Song not found:', songId);
+    }
+
+    function pauseSong() {
+      if (currentAudio) currentAudio.pause();
+    }
+
+    function toggleSound() {
+      soundEnabled = !soundEnabled;
+      document.getElementById('playSoundButton').innerText = soundEnabled ? 'Sound Ausschalten' : 'Sound Einschalten';
+      if (!soundEnabled) {
+        if (currentAudio) currentAudio.pause();
+        loopAudio.pause();
+      } else {
+        if (currentAudio) currentAudio.play();
+        else loopAudio.play().catch(error => console.error('Error playing loop audio:', error));
+      }
+    }
+
+    updateUI();
+  </script>
 </body>
 </html>
