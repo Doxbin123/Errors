@@ -1,0 +1,17 @@
+{
+  "name": "telegram-meme-bot",
+  "version": "1.0.0",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "description": "",
+  "dependencies": {
+    "express": "^2.5.11",
+    "node-telegram-bot-api": "^0.63.0",
+    "uuid": "^10.0.0"
+  }
+}

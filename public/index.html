@@ -1,0 +1,80 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Deutsche Meme Generator</title>
+    <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet">
+    <script src="https://cdn.jsdelivr.net/npm/vue@2.7.14/dist/vue.js"></script>
+</head>
+<body class="bg-gray-100">
+    <div id="app" class="container mx-auto p-4">
+        <h1 class="text-3xl font-semibold mb-4">Deutsche Meme Generator</h1>
+        <div class="bg-white rounded-md shadow-md p-4 mb-4">
+            <div class="mb-4">
+                <img v-if="memeImageUrl" :src="memeImageUrl" class="max-h-64 mx-auto">
+            </div>
+            <div class="mb-4">
+                <label for="imageInput" class="block mb-2">Bild hochladen</label>
+                <input type="file" id="imageInput" @change="handleImageUpload" class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500">
+            </div>
+            <div class="mb-4">
+                <p class="font-semibold">Bildbeschreibung: {{ caption }}</p>
+            </div>
+            <div class="mb-4">
+                <p class="font-semibold">Meme-Text: {{ joke }}</p>
+            </div>
+            <button @click="generateMeme" class="bg-blue-500 text-white px-4 py-2 rounded-md hover:bg-blue-600">Meme generieren</button>
+        </div>
+    </div>
+
+    <script type="module">
+        new Vue({
+            el: '#app',
+            data: {
+                memeImageUrl: '',
+                caption: '',
+                joke: ''
+            },
+            methods: {
+                async handleImageUpload(event) {
+                    const file = event.target.files[0];
+                    this.memeImageUrl = URL.createObjectURL(file);
+
+                    // Use Salesforce/blip-image-captioning-large for image captioning
+                    const { HfInference } = await import('https://esm.sh/@huggingface/inference');
+                    const hf = new HfInference('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');
+
+                    const response = await hf.imageToText({
+                        model: 'Salesforce/blip-image-captioning-large',
+                        data: await fetch(this.memeImageUrl).then(r => r.blob())
+                    });
+
+                    this.caption = response.generated_text;
+                },
+                async generateMeme() {
+                    // Call the LLM API to generate a funny German joke about the caption
+                    const { HfInference } = await import('https://esm.sh/@huggingface/inference');
+                    const hf = new HfInference('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');
+
+                    let out = "";
+                    for await (const chunk of hf.chatCompletionStream({
+                        model: "mistralai/Mixtral-8x7B-Instruct-v0.1",
+                        messages: [
+                            { role: "user", content: `Generiere einen witzigen deutschen Witz über die Bildbeschreibung: "${this.caption}"` }
+                        ],
+                        max_tokens: 500,
+                        temperature: 0.7,
+                        seed: 0,
+                    })) {
+                        if (chunk.choices && chunk.choices.length > 0) {
+                            out += chunk.choices[0].delta.content || "";
+                        }
+                    }
+                    this.joke = out.trim();
+                }
+            }
+        });
+    </script>
+</body>
+</html>
